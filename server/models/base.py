@@ -13,7 +13,6 @@ from server.enums import (ClientMessageType, Instrument, OrderSide,
                           OrderStatus, ServerMessageType)
 
 
-
 def snake_to_camel(snake_str: str) -> str:
     if snake_str == "":
         return snake_str

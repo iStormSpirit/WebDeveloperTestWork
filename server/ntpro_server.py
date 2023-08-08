@@ -1,21 +1,26 @@
 import asyncio
 import json
+import uuid
+from typing import List
 
 import fastapi
 import pydantic
+import starlette.datastructures
 from bidict import bidict
 
 from server.enums import Instrument
 from server.message_processors import gen_quote
 from server.models import base, client_messages, server_messages
 
+TIMEOUT = 10
+
 
 class NTProServer:
     def __init__(self):
-        self.connections: dict[str, fastapi.WebSocket] = {}
-        self.subscribes = {}
-        self.orders = {}
-        self.quotes = dict(zip(Instrument, [[] for x in range(len(Instrument))]))
+        self.connections: dict[starlette.datastructures.Address, fastapi.WebSocket] = {}
+        self.subscribes: dict[starlette.datastructures.Address, bidict] = {}
+        self.orders: dict[starlette.datastructures.Address, dict[uuid.UUID, base.OrderIn]] = {}
+        self.quotes: dict[Instrument, List[base.Quote]] = dict(zip(Instrument, [[] for _ in range(len(Instrument))]))
 
     async def connect(self, websocket: fastapi.WebSocket):
         await websocket.accept()
@@ -50,6 +55,8 @@ class NTProServer:
 
     @staticmethod
     async def send(message: base.MessageT, websocket: fastapi.WebSocket):
-        await websocket.send_text(server_messages.ServerEnvelope(message_type=message.get_type(),
-                                                                 message=message.dict(by_alias=True)).json(
-            by_alias=True))
+        await websocket.send_text(
+            server_messages.ServerEnvelope(message_type=message.get_type(),
+                                           message=message.dict(by_alias=True)
+                                           ).json(by_alias=True)
+        )

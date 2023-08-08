@@ -46,8 +46,7 @@ async def place_order_processor(
     new_order = OrderIn(**message.dict())
     uuid = uuid4()
     server.orders[websocket.client][uuid] = new_order
-    return server_messages.ExecutionReport(order_id=uuid,
-                                           order_status=new_order.status)
+    return server_messages.SuccessInfo(subscription_id=uuid)
 
 
 async def cancel_order_processor(
@@ -59,14 +58,13 @@ async def cancel_order_processor(
     order = server.orders[websocket.client].get(uuid)
     if order.status == OrderStatus.active:
         order.status = OrderStatus.cancelled
-    return server_messages.ExecutionReport(
-        order_id=uuid, order_status=order.status)
+    return server_messages.ExecutionReport(order_id=uuid, order_status=order.status)
 
 
 async def get_orders_processor(
         server: NTProServer,
         websocket: fastapi.WebSocket,
-        message: client_messages.PlaceOrder,
+        message: client_messages.PlaceOrder
 ):
     orders_list = [
         OrderOut(uuid=uuid, **values.dict()) for uuid, values in server.orders[websocket.client].items()
@@ -77,14 +75,12 @@ async def get_orders_processor(
 async def save_order_processor(
         server: NTProServer,
         websocket: fastapi.WebSocket,
-        message: client_messages.SaveOrder,
+        message: client_messages.SaveOrder
 ):
     uuid = message.dict().get('order_id')
     order = server.orders[websocket.client].get(uuid)
     order_query = orders_table.insert().values(
-        uuid=uuid, address=str(websocket.client), **order.dict()).returning(
-        orders_table.c.uuid)
-
+        uuid=uuid, address=str(websocket.client), **order.dict()).returning(orders_table.c.uuid)
     await database.connect()
     record = await database.fetch_one(order_query)
     uuid_from_db = dict(zip(record, record.values())).get('uuid')
@@ -92,10 +88,7 @@ async def save_order_processor(
     return server_messages.OrderSaved(order_id=uuid_from_db)
 
 
-async def gen_order(
-        server: NTProServer,
-        websocket: fastapi.WebSocket
-):
+async def gen_order(server: NTProServer, websocket: fastapi.WebSocket):
     orders = server.orders[websocket.client]
     active_orders_keys = [key for key, value in orders.items() if value.status == OrderStatus.active]
     if not active_orders_keys:
