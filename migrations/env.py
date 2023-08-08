@@ -1,5 +1,6 @@
 import asyncio
 import os
+import sys
 from logging.config import fileConfig
 
 from alembic import context
@@ -7,6 +8,7 @@ from dotenv import load_dotenv
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
+
 
 from server.models import db
 
@@ -16,8 +18,8 @@ config = context.config
 
 load_dotenv()
 section = config.config_ini_section
-config.set_section_option(section, "POSTGRES_USER", os.getenv('POSTGRES_USER'))
-config.set_section_option(section, "POSTGRES_PASSWORD", os.getenv("POSTGRES_PASSWORD"))
+config.set_section_option(section, "PS_USER", os.getenv('PS_USER'))
+config.set_section_option(section, "PS_PASS", os.getenv("PS_PASS"))
 config.set_section_option(section, "DB_NAME", os.getenv("DB_NAME"))
 config.set_section_option(section, "DB_HOST", os.getenv("DB_HOST"))
 config.set_section_option(section, "DB_PORT", os.getenv("DB_PORT"))
@@ -31,13 +33,13 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = [db.metadata,]
+target_metadata = [db.metadata]
+
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
-
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
