@@ -2,11 +2,16 @@ from __future__ import annotations
 
 import abc
 import asyncio
+import datetime
 import decimal
+import uuid
 from typing import TypeVar
 
 import pydantic
-from enums import ClientMessageType, ServerMessageType
+
+from server.enums import (ClientMessageType, Instrument, OrderSide,
+                          OrderStatus, ServerMessageType)
+
 
 
 def snake_to_camel(snake_str: str) -> str:
@@ -51,6 +56,21 @@ class Quote(pydantic.BaseModel):
     offer: decimal.Decimal
     min_amount: decimal.Decimal
     max_amount: decimal.Decimal
+    timestamp: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
+
+
+class OrderIn(pydantic.BaseModel):
+    creation_time: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
+    change_time: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
+    status: OrderStatus = OrderStatus.active
+    side: OrderSide
+    price: decimal.Decimal
+    amount: int
+    instrument: Instrument
+
+
+class OrderOut(OrderIn):
+    uuid: uuid.UUID
 
 
 MessageT = TypeVar('MessageT', bound=Message)

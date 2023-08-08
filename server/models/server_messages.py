@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import uuid
-from typing import Dict, TypeVar
+from typing import TypeVar
 
 import bidict as bidict
-import enums as enums
-from models.base import Envelope, Message, Quote
+
+from server import enums
+from server.models.base import Envelope, Message, OrderOut, Quote
 
 
 class ServerMessage(Message):
@@ -18,10 +19,7 @@ class ErrorInfo(ServerMessage):
 
 
 class SuccessInfo(ServerMessage):
-    info: Dict[str, str] = {}
-
-    def dict(self):
-        return self.info
+    subscription_id: uuid.UUID
 
 
 class ExecutionReport(ServerMessage):
@@ -31,8 +29,16 @@ class ExecutionReport(ServerMessage):
 
 class MarketDataUpdate(ServerMessage):
     subscription_id: uuid.UUID
-    # instrument: enums.Instrument
+    instrument: enums.Instrument
     quotes: list[Quote]
+
+
+class OrdersList(ServerMessage):
+    orders: list[OrderOut]
+
+
+class OrderSaved(ServerMessage):
+    order_id: uuid.UUID
 
 
 class ServerEnvelope(Envelope):
@@ -41,11 +47,18 @@ class ServerEnvelope(Envelope):
     def get_parsed_message(self):
         return _SERVER_MESSAGE_TYPE_BY_CLASS.inverse[self.message_type].parse_obj(self.message)
 
+    class Config(Envelope.Config):
+        json_encoders = {enums.Instrument: lambda e: e.name.replace('_', '/').upper(),
+                         enums.OrderSide: lambda e: e.name,
+                         enums.OrderStatus: lambda e: e.name}
+
 
 _SERVER_MESSAGE_TYPE_BY_CLASS = bidict.bidict({
     SuccessInfo: enums.ServerMessageType.success,
     ErrorInfo: enums.ServerMessageType.error,
     ExecutionReport: enums.ServerMessageType.execution_report,
     MarketDataUpdate: enums.ServerMessageType.market_data_update,
+    OrdersList: enums.ServerMessageType.orders_list,
+    OrderSaved: enums.ServerMessageType.order_saved,
 })
 ServerMessageT = TypeVar('ServerMessageT', bound=ServerMessage)

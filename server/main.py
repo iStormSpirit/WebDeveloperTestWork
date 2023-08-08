@@ -2,20 +2,13 @@ import mimetypes
 import pathlib
 
 import fastapi
-from models.db import database
 from ntpro_server import NTProServer
+from websockets.exceptions import ConnectionClosedOK
 
 api = fastapi.FastAPI()
 server = NTProServer()
 html = pathlib.Path('index.html').read_text()
 
-@api.on_event('startup')
-async def startup():
-    await database.connect()
-
-@api.on_event('shutdown')
-async def shutdown():
-    await database.disconnect()
 
 @api.get('/')
 async def get():
@@ -35,5 +28,5 @@ async def websocket_endpoint(websocket: fastapi.WebSocket):
 
     try:
         await server.serve(websocket)
-    except fastapi.WebSocketDisconnect:
-        server.disconnect(websocket)
+    except (fastapi.WebSocketDisconnect, ConnectionClosedOK):
+        await server.disconnect(websocket)
