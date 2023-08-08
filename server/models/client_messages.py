@@ -49,11 +49,14 @@ class PlaceOrder(ClientMessage):
 class CancelOrder(ClientMessage):
     order_id: uuid.UUID
 
+
 class GetOrders(ClientMessage):
     pass
 
+
 class SaveOrder(ClientMessage):
     order_id: uuid.UUID
+
 
 _MESSAGE_PROCESSOR_BY_CLASS = {
     SubscribeMarketData: message_processors.subscribe_market_data_processor,
@@ -61,7 +64,6 @@ _MESSAGE_PROCESSOR_BY_CLASS = {
     PlaceOrder: message_processors.place_order_processor,
     CancelOrder: message_processors.cancel_order_processor,
     GetOrders: message_processors.get_orders_processor,
-    SaveOrder: message_processors.save_order_processor,
 }
 
 _CLIENT_MESSAGE_TYPE_BY_CLASS = bidict.bidict({
@@ -70,7 +72,6 @@ _CLIENT_MESSAGE_TYPE_BY_CLASS = bidict.bidict({
     PlaceOrder: enums.ClientMessageType.place_order,
     CancelOrder: enums.ClientMessageType.cancel_order,
     GetOrders: enums.ClientMessageType.get_orders,
-    SaveOrder: enums.ClientMessageType.save_order,
 })
 
 ClientMessageT = TypeVar('ClientMessageT', bound=ClientMessage)

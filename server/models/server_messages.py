@@ -47,18 +47,16 @@ class ServerEnvelope(Envelope):
     def get_parsed_message(self):
         return _SERVER_MESSAGE_TYPE_BY_CLASS.inverse[self.message_type].parse_obj(self.message)
 
-    class Config(Envelope.Config):
-        json_encoders = {enums.Instrument: lambda e: e.name.replace('_', '/').upper(),
-                         enums.OrderSide: lambda e: e.name,
-                         enums.OrderStatus: lambda e: e.name}
 
+_SERVER_MESSAGE_TYPE_BY_CLASS = bidict.bidict(
+    {
+        SuccessInfo: enums.ServerMessageType.success,
+        ErrorInfo: enums.ServerMessageType.error,
+        ExecutionReport: enums.ServerMessageType.execution_report,
+        MarketDataUpdate: enums.ServerMessageType.market_data_update,
+        OrdersList: enums.ServerMessageType.orders_list,
+        OrderSaved: enums.ServerMessageType.order_saved,
+    }
+)
 
-_SERVER_MESSAGE_TYPE_BY_CLASS = bidict.bidict({
-    SuccessInfo: enums.ServerMessageType.success,
-    ErrorInfo: enums.ServerMessageType.error,
-    ExecutionReport: enums.ServerMessageType.execution_report,
-    MarketDataUpdate: enums.ServerMessageType.market_data_update,
-    OrdersList: enums.ServerMessageType.orders_list,
-    OrderSaved: enums.ServerMessageType.order_saved,
-})
 ServerMessageT = TypeVar('ServerMessageT', bound=ServerMessage)

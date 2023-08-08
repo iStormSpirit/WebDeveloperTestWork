@@ -41,14 +41,18 @@ class NTProServer:
                 message = envelope.get_parsed_message()
                 response = await message.process(self, websocket)
                 await self.send(response, websocket)
+
             except asyncio.TimeoutError:
                 await gen_quote(self)
                 await websocket.send_text(str(websocket.client))
+
             except pydantic.ValidationError as ex:
                 await self.send(server_messages.ErrorInfo(reason=str(ex)), websocket)
+
             except json.decoder.JSONDecodeError:
                 await self.send(server_messages.ErrorInfo(
                     reason='The message is not a valid JSON'), websocket)
+
             except Exception as ex:
                 await self.send(server_messages.ErrorInfo(reason=str(ex)), websocket)
                 continue
