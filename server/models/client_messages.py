@@ -13,7 +13,7 @@ from models.base import Envelope, Message
 from models.server_messages import ServerMessageT
 
 if TYPE_CHECKING:
-    from ntpro_server import NTProServer
+    from server.ntpro_server import NTProServer
 
 
 class ClientEnvelope(Envelope):
@@ -33,7 +33,6 @@ class ClientMessage(Message):
 
 class SubscribeMarketData(ClientMessage):
     instrument: int
-    # instrument: enums.Instrument
 
 
 class UnsubscribeMarketData(ClientMessage):
