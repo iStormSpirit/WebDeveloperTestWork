@@ -2,8 +2,8 @@ version: '3.3'
 
 services:
   db:
-    image: postgres:14.0-alpine
-    ports:
+    image: postgres:15.0-alpine
+    ports: 
      - "5433:5433"
     volumes:
       - db_val:/var/lib/postgresql/data/
@@ -19,7 +19,7 @@ services:
      - db
 
     env_file:
-      - ./.env
+      - ./.env 
 
 volumes:
   db_val:

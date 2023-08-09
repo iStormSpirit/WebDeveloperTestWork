@@ -9,19 +9,30 @@ from sqlalchemy.dialects.postgresql import ENUM, UUID
 from sqlalchemy.types import DECIMAL
 
 from server.enums import Instrument, OrderSide, OrderStatus
+from server.pytest_conditions import RUN_FROM_PYTEST
 
 load_dotenv()
 
-DB_NAME = os.getenv("DB_NAME", "test")
-PS_USER = os.getenv("PS_USER", "user")
-PS_PASS = os.getenv("PS_PASS", "password")
+DB_NAME = os.getenv("DB_NAME", "testdev")
+POSTGRES_USER = os.getenv("POSTGRES_USER", "user")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "password")
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "5432")
 
-SQLALCHEMY_DATABASE_URL = f"postgresql+asyncpg://{PS_USER}:{PS_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-database = databases.Database(SQLALCHEMY_DATABASE_URL)
+if RUN_FROM_PYTEST:
+    TEST_DB_NAME = 'test_db'
+    TEST_SQLALCHEMY_DATABASE_URL = (
+        f'postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{DB_HOST}:'
+        f'{DB_PORT}/{TEST_DB_NAME}')
+    database = databases.Database(TEST_SQLALCHEMY_DATABASE_URL)
+else:
+    SQLALCHEMY_DATABASE_URL = (
+        f'postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{DB_HOST}:'
+        f'{DB_PORT}/{DB_NAME}')
+    database = databases.Database(SQLALCHEMY_DATABASE_URL)
 
 ReqColumn = partial(Column, nullable=False)
+
 metadata = sqlalchemy.MetaData()
 
 orders_table = sqlalchemy.Table(
