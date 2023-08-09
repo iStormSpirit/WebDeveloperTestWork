@@ -1,21 +1,21 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import uuid4
+
+from bidict import ValueDuplicationError
 
 from server.enums import OrderStatus
 from server.models import server_messages
 from server.models.base import OrderIn, OrderOut
 from server.utils import create_order, update_order
 
-from datetime import datetime
-from bidict import ValueDuplicationError
-
 if TYPE_CHECKING:
     import fastapi
 
-    from server.models import client_messages
-    from server.ntpro_server import NTProServer
+    from src.server.models import client_messages
+    from src.server.ntpro_server import NTProServer
 
 
 async def subscribe_market_data_processor(

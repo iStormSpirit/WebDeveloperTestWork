@@ -4,9 +4,9 @@ services:
   db:
     image: postgres:14.0-alpine
     ports:
-     - "5434:5434"
+     - "5433:5433"
     volumes:
-      - db_value:/var/lib/postgresql/data/
+      - db_val:/var/lib/postgresql/data/
     env_file:
       - ./.env
 
@@ -16,9 +16,10 @@ services:
     ports:
      - "8000:8000"
     depends_on:
-      - db
+     - db
+
     env_file:
       - ./.env
 
 volumes:
-  db_value:
+  db_val:

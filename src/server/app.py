@@ -2,8 +2,9 @@ import mimetypes
 import pathlib
 
 import fastapi
-from ntpro_server import NTProServer
 from websockets.exceptions import ConnectionClosedOK
+
+from server.ntpro_server import NTProServer
 
 api = fastapi.FastAPI()
 server = NTProServer()

@@ -63,7 +63,7 @@ sql.db
 __pypackages__/
 
 # Environments
-.env
+src/.env
 .venv
 env/
 venv/
