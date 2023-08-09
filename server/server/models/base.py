@@ -8,7 +8,6 @@ import uuid
 from typing import TypeVar
 
 import pydantic
-
 from server.enums import (ClientMessageType, Instrument, OrderSide,
                           OrderStatus, ServerMessageType)
 
@@ -60,18 +59,15 @@ class Quote(pydantic.BaseModel):
     offer: decimal.Decimal
     min_amount: decimal.Decimal
     max_amount: decimal.Decimal
-    timestamp: datetime.datetime = pydantic.Field(
-        default_factory=datetime.datetime.now)
+    timestamp: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
     class Config(Camel):
         pass
 
 
 class OrderIn(pydantic.BaseModel):
-    creation_time: datetime.datetime = pydantic.Field(
-        default_factory=datetime.datetime.now)
-    change_time: datetime.datetime = pydantic.Field(
-        default_factory=datetime.datetime.now)
+    creation_time: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
+    change_time: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
     status: OrderStatus = OrderStatus.active
     side: OrderSide
     price: decimal.Decimal

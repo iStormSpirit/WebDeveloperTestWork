@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING, TypeVar
 import bidict as bidict
 import fastapi
 import pydantic
-
-from server import enums, message_processors
 from server.models.base import Envelope, Message
 from server.models.server_messages import ServerMessageT
+
+from server import enums, message_processors
 
 if TYPE_CHECKING:
     from server.ntpro_server import NTProServer
@@ -24,9 +24,7 @@ class ClientEnvelope(Envelope):
 
 
 class ClientMessage(Message):
-    async def process(self: ClientMessageT,
-                      server: NTProServer,
-                      websocket: fastapi.WebSocket) -> ServerMessageT:
+    async def process(self: ClientMessageT, server: NTProServer, websocket: fastapi.WebSocket) -> ServerMessageT:
         return await _MESSAGE_PROCESSOR_BY_CLASS[self.__class__](server, websocket, self)
 
     def get_type(self: ClientMessageT) -> enums.ClientMessageType:
@@ -68,12 +66,14 @@ _MESSAGE_PROCESSOR_BY_CLASS = {
     GetOrders: message_processors.get_orders_processor,
 }
 
-_CLIENT_MESSAGE_TYPE_BY_CLASS = bidict.bidict({
-    SubscribeMarketData: enums.ClientMessageType.subscribe_market_data,
-    UnsubscribeMarketData: enums.ClientMessageType.unsubscribe_market_data,
-    PlaceOrder: enums.ClientMessageType.place_order,
-    CancelOrder: enums.ClientMessageType.cancel_order,
-    GetOrders: enums.ClientMessageType.get_orders,
-})
+_CLIENT_MESSAGE_TYPE_BY_CLASS = bidict.bidict(
+    {
+        SubscribeMarketData: enums.ClientMessageType.subscribe_market_data,
+        UnsubscribeMarketData: enums.ClientMessageType.unsubscribe_market_data,
+        PlaceOrder: enums.ClientMessageType.place_order,
+        CancelOrder: enums.ClientMessageType.cancel_order,
+        GetOrders: enums.ClientMessageType.get_orders,
+    }
+)
 
 ClientMessageT = TypeVar('ClientMessageT', bound=ClientMessage)

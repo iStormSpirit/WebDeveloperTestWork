@@ -4,9 +4,9 @@ import uuid
 from typing import TypeVar
 
 import bidict as bidict
+from server.models.base import Envelope, Message, OrderOut, Quote
 
 from server import enums
-from server.models.base import Envelope, Message, OrderOut, Quote
 
 
 class ServerMessage(Message):
@@ -50,11 +50,13 @@ class ServerEnvelope(Envelope):
             enums.OrderStatus: lambda e: e.name}
 
 
-_SERVER_MESSAGE_TYPE_BY_CLASS = bidict.bidict({
-    SuccessInfo: enums.ServerMessageType.success,
-    ErrorInfo: enums.ServerMessageType.error,
-    ExecutionReport: enums.ServerMessageType.execution_report,
-    MarketDataUpdate: enums.ServerMessageType.market_data_update,
-    OrdersList: enums.ServerMessageType.orders_list,
-})
+_SERVER_MESSAGE_TYPE_BY_CLASS = bidict.bidict(
+    {
+        SuccessInfo: enums.ServerMessageType.success,
+        ErrorInfo: enums.ServerMessageType.error,
+        ExecutionReport: enums.ServerMessageType.execution_report,
+        MarketDataUpdate: enums.ServerMessageType.market_data_update,
+        OrdersList: enums.ServerMessageType.orders_list,
+    }
+)
 ServerMessageT = TypeVar('ServerMessageT', bound=ServerMessage)

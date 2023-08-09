@@ -3,9 +3,8 @@ import os
 import pytest
 from alembic import command
 from alembic.config import Config
-from sqlalchemy_utils import create_database, drop_database
-
 from server.models import dbase
+from sqlalchemy_utils import create_database, drop_database
 
 os.environ['DB_NAME'] = 'test_db'
 

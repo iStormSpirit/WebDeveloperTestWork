@@ -1,9 +1,16 @@
 # Бэкенд для симулятора биржи
 
-Можно отправить заявку (ордер) на покупку или продажу какого-либо актива. 
-Получив заявку, биржа ищет встречную заявку для заключения сделки.
-Заявка в итоге может быть исполнена, отклонена или же ее можно отменить самому.
-Исполнение заявок и поток котировок симулируются как случайные события.
+Предлагается разработать простой симулятор биржи с клиент-серверной архитектурой.
+
+Биржа это такой "сервис" куда можно отправить заявку (ордер) на покупку или продажу какого либо актива. Получив заявку
+биржа, применяя некую торговую логику, ищет встречную заявку для заключения сделки. Заявка в итоге может быть исполнена,
+отклонена или же ее можно отменить самому. При выставлении заявки можно ориентироваться на текущие цены данного актива (
+котировки), для более вероятного исполнения заявки.
+
+Взаимодействие с биржей происходит через торговый терминал, который является клиентом в данной архитектуре, а сама
+биржа - это сервер.
+
+## Биржа
 
 Биржа (сервер) поддерживает подключение по протоколу `websocket` нескольких клиентов одновременно, дает им возможность:
 
@@ -12,46 +19,40 @@
 * выставлять заявки
 * отменять активные заявки
 
-## Технологии
-Python 3.10, FastAPI, Pytest, SQLAlchemy, Alembic, Docker, PostgreSQL
-
 ## Локальный запуск проекта
-Для запуска подойдёт Docker 20.10.21, Docker Compose 2.12.2.  
-Клонируйте репозиторий:
+
+Скачать архив (предварительно должен быть установлен docker и docker-compose).
+
 ```
-git clone git@github.com:ElenaChuvasheva/webdevelopertestwork.git
+git clone git@github.com:iStormSpirit/WebDeveloperTestWork.git
 ```
-Перейдите в папку webdevelopertestwork/server:
+
+Перейти в папку и собрать контейнер
+
 ```
-cd webdevelopertestwork\server
+cd webdevelopertestwork/server/server && docker-compose up 
 ```
-Создайте в этой папке файл .env с переменными окружения для работы с базой данных, значения имени пользователя и пароля даны для примера:
-```
-DB_NAME=exchange
-DB_HOST=db
-DB_PORT=5432
-POSTGRES_USER=root
-POSTGRES_DB=exchange
-POSTGRES_PASSWORD=root
-```
-В этой же папке запустите команду сборки контейнеров:
-```
-docker-compose up
-```
-Запустите миграции:
+
+Во втором терминале сделать миграцию
+
 ```
 docker-compose exec web alembic upgrade head
 ```
-Проект с минимальным интерфейсом откроется по адресу http://127.0.0.1:8000/ .  
-Запуск тестов:
+
+Если необходимо, то запустить тесты
+
 ```
 docker-compose exec web pytest
 ```
 
+Перейти в браузер по адресу http://127.0.0.1:8000/
+
 ## API
+
 ### Структура сообщений
+
 Все сообщения имеют общий `JSON` формат:
-    
+
     {
         "messageType": <integer>,
         "message": <object>
@@ -60,105 +61,146 @@ docker-compose exec web pytest
 В зависимости от типа сообщения (`messageType`) само сообщение (`message`) должно иметь конкретный формат, например:
 
 **SubscribeMarketData** `messageType=1`
-    
+
     | Field          | Type     | Comment                                                            |
     |----------------|----------|--------------------------------------------------------------------|
     | **instrument** | integer  | Идентификатор инструмента на котировки которого запрошена подписка |
 
 Пример:
-    
+
         {"instrument": 12}
-    
-В случае успешной подписки, сервер отвечает сообщением **SuccessInfo**, где поле `message` будет содержать идентификатор подписки:
-    
+
+В случае успешной подписки, сервер отвечает сообщением **SuccessInfo**, где поле `message` будет содержать идентификатор
+подписки:
+
         {"subscriptionId": <string:UUID>}
-    
+
 И далее при каждом изменении котировок, сервер будет присылать сообщение **MarketDataUpdate**.
-    
-В случае какой-либо ошибки, сервер отвечает сообщением **ErrorInfo**, где поле `message` будет содержать описание причины ошибки:
-    
+
+В случае какой-либо ошибки, сервер отвечает сообщением **ErrorInfo**, где поле `message` будет содержать описание
+причины ошибки:
+
         {"reason": <string>}
-    
+
 Чтобы отменить подписку, нужно отправить сообщение **UnsubscribeMarketData**.
 
 ### Примеры сообщений
+
 #### Подписка на инструмент
+
 Запрос:
+
 ```
 {
     "messageType": 1,
     "message": {"instrument": 1}
 }
 ```
+
 Ответ:
+
 ```
 {
     "messageType": 1,
-    "message": {"subscriptionId": "46a122ae-f7ae-492e-900e-c9166d673c4d"}
+    "message": {"subscriptionId": "8e565f01-33eb-44c5-a827-c870115cccc8"}
 }
 ```
+
 #### Отписка от инструмента
+
 Запрос:
+
 ```
 {
     "messageType": 2,
-    "message": {"subscriptionId": "0c11e37fc1e1433ea2732c39600ea577"}
+    "message": {"subscriptionId": "8e565f01-33eb-44c5-a827-c870115cccc8"}
 }
 ```
+
 Ответ:
+
 ```
 {
     "messageType": 1,
-    "message": {"subscriptionId": "0c11e37fc1e1433ea2732c39600ea577"}
+    "message": {"subscriptionId": "8e565f01-33eb-44c5-a827-c870115cccc8"}
 }
 ```
+
 #### Размещение заявки
+
 Запрос:
+
 ```
 {
     "messageType": 3,
-    "message": {"instrument": 2, "side": 1, "amount": 3, "price": 20}
+    "message": {"instrument": 2, "side": 1, "amount": 5, "price": 100}
 }
 ```
+
 Ответ:
+
 ```
 {
     "messageType": 3,
-    "message": {"orderId": "85693ea2-2d9c-4d25-b9e3-105194d1a7fd", "orderStatus": "active"}
+    "message": {"orderId": "8e565f01-33eb-44c5-a827-c870115cccc8", "orderStatus": "active"}
 }
 ```
+
 #### Сообщение с результатом обработки заявки
+
 Ответ:
+
 ```
 {
     "messageType": 3,
-    "message": {"orderId": "85693ea2-2d9c-4d25-b9e3-105194d1a7fd", "orderStatus": "filled"}
+    "message": {"orderId": "8e565f01-33eb-44c5-a827-c870115cccc8", "orderStatus": "filled"}
 }
 ```
+
+#### Сообщение с результатом автоотмены заявки
+
+Ответ:
+
+```
+{
+    "messageType": 3,
+    "message": {"orderId": "8e565f01-33eb-44c5-a827-c870115cccc8", "orderStatus": "rejected"}
+}
+```
+
 #### Отмена заявки
+
 Запрос:
+
 ```
 {
     "messageType": 4,
-    "message": {"orderId": "4a01e7fc-4cb5-4718-b563-9d049c6b0272"}
+    "message": {"orderId": "8e565f01-33eb-44c5-a827-c870115cccc8"}
 }
 ```
+
 Ответ:
+
 ```
 {
     "messageType": 3,
-    "message": {"orderId": "4a01e7fc-4cb5-4718-b563-9d049c6b0272", "orderStatus": "cancelled"}
+    "message": {"orderId": "8e565f01-33eb-44c5-a827-c870115cccc8", "orderStatus": "cancelled"}
 }
 ```
+
 #### Запрос всех своих заявок
+
 Запрос:
+
 ```
 {
     "messageType": 5,
     "message": {}
 }
 ```
+
 Ответ:
+
 ```
 {
     "messageType": 5,
@@ -166,52 +208,58 @@ docker-compose exec web pytest
                 "orders": 
                          [        
                               {    
-                                   "creationTime": "2023-03-30T11:34:01.456227",
-                                   "changeTime": "2023-03-30T11:34:22.550857",
+                                   "creationTime": "2023-01-01T00:00:00.000000",
+                                   "changeTime": "2023-01-01T00:00:00.000000",
                                    "status": "rejected",  "side": "buy",
-                                   "price": 30, "amount": 2,
+                                   "price": 50, "amount": 5,
                                    "instrument": "EUR/RUB",
-                                   "uuid": "8b4d17ca-db5b-4e44-808f-affbbb7656ab"
+                                   "uuid": "8e565f01-33eb-44c5-a827-c870115cccc8"
                               },
                               {    
-                                   "creationTime": "2023-03-30T11:34:12.548832",
-                                   "changeTime": "2023-03-30T11:34:12.548839",
+                                   "creationTime": "2023-01-01T00:00:00.000000",
+                                   "changeTime": "2023-01-01T00:00:00.000000",
                                    "status": "active", "side": "sell",
-                                   "price": 20, "amount": 3,
+                                   "price": 50, "amount": 5,
                                    "instrument": "EUR/RUB",
-                                   "uuid": "75c936d0-8ae1-4f20-9510-97f557b679d1"
+                                   "uuid": "8e565f01-33eb-44c5-a827-c870115cccc8"
                               }
                          ]
                }
 }
 ```
+
 #### Сообщение об изменении котировок
+
 Ответ:
+
 ```
 {
     "messageType": 4,
     "message": {    
-                "subscriptionId": "634905d5-13f0-4cd6-8b62-1b5a24227029", "instrument": "USD/RUB",
+                "subscriptionId": "8e565f01-33eb-44c5-a827-c870115cccc8", "instrument": "USD/RUB",
                 "quotes": 
                          [    
                               {    
-                                   "bid": 32.540866044239536, "offer": 32.768034070299606,
-                                   "minAmount": 30.97320671154219,
-                                   "maxAmount": 36.668907735148736,
-                                   "timestamp": "2023-03-30T11:42:51.229960"
+                                   "bid": 32.6492474374773, "offer": 32.702687400399606,
+                                   "minAmount": 30.615497067132219,
+                                   "maxAmount": 36.660783514879736,
+                                   "timestamp": "2023-01-01T00:00:00.000000"
                               },
                               {
-                                   "bid": 35.30738166239448, "offer": 37.97198429333178,
-                                   "minAmount": 34.039151483095445,
-                                   "maxAmount": 38.928840172008506,
-                                   "timestamp": "2023-03-30T11:43:01.231579"
+                                   "bid": 35.13073866239448, "offer": 37.42933397198178,
+                                   "minAmount": 34.009541545391483,
+                                   "maxAmount": 38.972840028018506,
+                                   "timestamp": "2023-01-01T00:00:00.000000"
                               }
                          ]
                }
 }
 ```
+
 #### Сообщение об ошибке
+
 Ответ:
+
 ```
 {
     "messageType": 2,

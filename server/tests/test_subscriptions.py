@@ -1,5 +1,4 @@
 from fastapi.testclient import TestClient
-
 from server.app import api
 from tests.utils_for_tests import is_valid_uuid
 
