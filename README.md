@@ -30,10 +30,10 @@ git clone git@github.com:iStormSpirit/WebDeveloperTestWork.git
 Перейти в папку и собрать контейнер
 
 ```
-cd webdevelopertestwork/server/server && docker-compose up 
+cd WebDeveloperTestWork/server/server && docker-compose up 
 ```
 
-Во втором терминале сделать миграцию
+Во втором окне терминала сделать миграцию
 
 ```
 docker-compose exec web alembic upgrade head
